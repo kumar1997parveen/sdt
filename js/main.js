@@ -1,6 +1,16 @@
 (function () {
   'use strict';
 
+  function runWhenReady(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn);
+    } else {
+      fn();
+    }
+  }
+
+  runWhenReady(function () {
+
   // Mobile nav toggle
   var navToggle = document.querySelector('.nav-toggle');
   var mainNav = document.querySelector('.main-nav');
@@ -86,23 +96,23 @@
   if (industriesSlider) {
     var indTrack = document.getElementById('industriesSliderTrack');
     var indDots = industriesSlider.querySelectorAll('.industries-slider__dot');
+    if (indTrack && indDots.length) {
+
     var indIndex = 0;
     var indTotal = 6;
     var indAutoplayInterval;
     var indAllPosClasses = ['industries-slider__track--pos-0', 'industries-slider__track--pos-1', 'industries-slider__track--pos-2', 'industries-slider__track--pos-3', 'industries-slider__track--pos-4', 'industries-slider__track--pos-5', 'industries-slider__track--pos-6'];
 
     function indSetPosition(pos, noTransition) {
-      if (indTrack) {
-        if (noTransition) indTrack.classList.add('is-jumping');
-        indAllPosClasses.forEach(function (c) { indTrack.classList.remove(c); });
-        indTrack.classList.add('industries-slider__track--pos-' + pos);
-        if (noTransition) {
+      if (noTransition) indTrack.classList.add('is-jumping');
+      indAllPosClasses.forEach(function (c) { indTrack.classList.remove(c); });
+      indTrack.classList.add('industries-slider__track--pos-' + pos);
+      if (noTransition) {
+        requestAnimationFrame(function () {
           requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-              indTrack.classList.remove('is-jumping');
-            });
+            indTrack.classList.remove('is-jumping');
           });
-        }
+        });
       }
       var dotIndex = pos === 6 ? 0 : pos;
       indDots.forEach(function (dot, i) {
@@ -111,22 +121,22 @@
       });
     }
 
-    function indGoToSlide(index) {
-      if (index < 0) index = indTotal - 1;
-      if (index >= indTotal) index = 0;
-      indIndex = index;
-      indSetPosition(indIndex, false);
-    }
-
     function indNextSlide() {
       if (indIndex === indTotal - 1) {
         indIndex = 6;
         indSetPosition(6, false);
-        indTrack.addEventListener('transitionend', function onEnd() {
+        var done = false;
+        function finishLoop() {
+          if (done) return;
+          done = true;
           indTrack.removeEventListener('transitionend', onEnd);
+          clearTimeout(fallback);
           indIndex = 0;
           indSetPosition(0, true);
-        }, { once: true });
+        }
+        function onEnd() { finishLoop(); }
+        var fallback = setTimeout(finishLoop, 600);
+        indTrack.addEventListener('transitionend', onEnd, { once: true });
       } else {
         indIndex += 1;
         indSetPosition(indIndex, false);
@@ -171,6 +181,9 @@
 
     indSetPosition(0, true);
     indStartAutoplay();
+    }
+
   }
 
+  }); // end runWhenReady
 })();
